@@ -24,8 +24,11 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.proxy.ProxyHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.resolver.AddressResolver;
+import io.netty.resolver.AddressResolverGroup;
 import io.netty.resolver.NoopAddressResolverGroup;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.EventExecutor;
 
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -330,7 +333,15 @@ public class HttpProxyServerHandler extends ChannelInboundHandlerAdapter {
                 // 代理服务器解析DNS和连接
                 bootstrap.resolver(NoopAddressResolverGroup.INSTANCE);
             } else {
-                bootstrap.resolver(getServerConfig().resolver());
+                if (false) {
+                    bootstrap.resolver(getServerConfig().resolver());
+                }
+                bootstrap.resolver(new AddressResolverGroup<InetSocketAddress>() {
+                    @Override
+                    protected AddressResolver<InetSocketAddress> newResolver(EventExecutor eventExecutor) throws Exception {
+                        return new MyResolver(eventExecutor);
+                    }
+                });
             }
             setRequestList(new LinkedList());
             setChannelFuture(bootstrap.connect(pipeRp.getHost(), pipeRp.getPort()));
